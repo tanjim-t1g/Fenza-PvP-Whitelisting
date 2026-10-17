@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "id": "fenza-pvp-whitelisting",
+  "version": "${version}",
+  "name": "Fenza PvP Whitelisting",
+  "description": "Handles PvP whitelist synchronization with compatible servers.",
+  "authors": [
+    "Fenza"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.fenza.pvpwhitelist.client.FenzaPvPWhitelistClient"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "minecraft": [
+      ">=26.1",
+      "26.2.x",
+      "26.2.*"
+    ],
+    "java": ">=25",
+    "fabric-api": "*"
+  }
+}

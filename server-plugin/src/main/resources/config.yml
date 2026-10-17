@@ -1,0 +1,39 @@
+# Fenza-PvP-Whitelisting Configuration
+
+# When true, ONLY players on the tracked-players list will be required to have the mod on join.
+# Untracked players can join freely without needing the companion mod.
+# When false, ALL players joining the server must have the mod.
+check-specific-players-only: true
+
+# Players required to have the client mod installed on join
+# Add or remove players via the in-game command: /modcheck <player>
+tracked-players: []
+
+# How long (in seconds) to wait for the client mod handshake before kicking
+handshake-timeout: 10
+
+# Message shown when player doesn't have the required mod
+kick-message-no-mod: "§cYou are missing a required mod to join this server."
+
+# Message shown when player's mod fails to respond in time
+kick-message-no-response: "§cConnection verification timed out. Please try again."
+
+# Message shown when player has a banned mod (%mod% is replaced with the mod id)
+kick-message-banned-mod: "§cYou have a prohibited mod installed: %mod%"
+
+# Whether to log player mod lists to console
+log-mod-lists: true
+
+# Discord Webhook configuration
+# Sends real-time mod verification reports and kick alerts to your Discord channel
+discord-webhook:
+  enabled: true
+  url: "" # Insert your Discord Webhook URL here
+  # Alert to Discord when a tracked player is kicked for not having the mod
+  alert-on-missing-mod: true
+
+# List of banned mod IDs (players with these mods will be kicked)
+banned-mods: []
+#  - "wurst"
+#  - "meteor-client"
+#  - "aristois"

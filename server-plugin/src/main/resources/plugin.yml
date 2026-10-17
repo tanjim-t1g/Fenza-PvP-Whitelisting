@@ -1,0 +1,23 @@
+name: Fenza-PvP-Whitelisting
+version: '${version}'
+main: com.fenza.pvpwhitelist.FenzaPvPWhitelist
+api-version: '1.21'
+authors:
+  - Fenza
+description: PvP whitelisting and verification system
+commands:
+  fenzamods:
+    description: View a player's mod list
+    usage: /fenzamods <player> [--all]
+    permission: fenza.modlist
+  modcheck:
+    description: Add or manage players whose mods must be verified on join
+    usage: /modcheck <player|add|remove|list> [player]
+    permission: fenza.modcheck
+permissions:
+  fenza.modlist:
+    description: Allows viewing player mod lists
+    default: op
+  fenza.modcheck:
+    description: Allows managing the mod check target list
+    default: op
