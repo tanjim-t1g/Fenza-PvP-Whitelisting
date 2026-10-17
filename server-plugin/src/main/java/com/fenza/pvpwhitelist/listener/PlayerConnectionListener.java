@@ -58,7 +58,7 @@ public class PlayerConnectionListener implements Listener, PluginMessageListener
 
     /**
      * When the client registers our custom channel:
-     * Only send the handshake if the player is actually in the target list (or if specific players mode is off).
+     * Only send the challenge handshake if the player is actually in the target list (or if specific players mode is off).
      */
     @EventHandler
     public void onChannelRegister(PlayerRegisterChannelEvent event) {
@@ -70,8 +70,7 @@ public class PlayerConnectionListener implements Listener, PluginMessageListener
             return;
         }
 
-        player.sendPluginMessage(plugin, FenzaPvPWhitelist.CHANNEL,
-                "HANDSHAKE".getBytes(StandardCharsets.UTF_8));
+        plugin.getModManager().triggerHandshake(player);
     }
 
     /**

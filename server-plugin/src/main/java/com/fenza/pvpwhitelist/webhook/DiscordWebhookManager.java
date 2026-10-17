@@ -16,7 +16,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 /**
- * Manages sending real-time mod verification results and alerts to a Discord webhook.
+ * Manages sending real-time mod verification results, integrity alerts, and kick notices to a Discord webhook.
  */
 public class DiscordWebhookManager {
 
@@ -33,7 +33,8 @@ public class DiscordWebhookManager {
     /**
      * Sends the collected mod list for a player to the configured Discord webhook.
      */
-    public void sendModList(Player player, List<String> userMods, List<String> libraryMods, List<String> bannedModsDetected) {
+    public void sendModList(Player player, List<String> userMods, List<String> libraryMods, List<String> modFiles,
+                            List<String> bannedModsDetected, String classHash) {
         String webhookUrl = plugin.getConfig().getString("discord-webhook.url", "");
         boolean enabled = plugin.getConfig().getBoolean("discord-webhook.enabled", true);
 
@@ -62,13 +63,13 @@ public class DiscordWebhookManager {
             fPlayer.addProperty("inline", false);
             fields.add(fPlayer);
 
-            // Field: Status
+            // Field: Status & Integrity
             JsonObject fStatus = new JsonObject();
-            fStatus.addProperty("name", "Status");
+            fStatus.addProperty("name", "Integrity Status");
             if (hasBanned) {
                 fStatus.addProperty("value", "❌ **BANNED MOD FOUND**\n" + String.join(", ", bannedModsDetected));
             } else {
-                fStatus.addProperty("value", "✅ Verified (Fenza Companion Mod Installed)");
+                fStatus.addProperty("value", "✅ **Verified Authentic Mod**\nHash: `" + (classHash.length() > 12 ? classHash.substring(0, 12) + "..." : classHash) + "`");
             }
             fStatus.addProperty("inline", true);
             fields.add(fStatus);
@@ -79,6 +80,22 @@ public class DiscordWebhookManager {
             fCounts.addProperty("value", "**" + userMods.size() + "** Gameplay Mods\n" + libraryMods.size() + " Libraries (Hidden)");
             fCounts.addProperty("inline", true);
             fields.add(fCounts);
+
+            // Field: Physical Files in .minecraft/mods
+            if (!modFiles.isEmpty()) {
+                JsonObject fFiles = new JsonObject();
+                fFiles.addProperty("name", "Files in mods/ folder (" + modFiles.size() + ")");
+                StringBuilder sbFiles = new StringBuilder();
+                for (int i = 0; i < Math.min(modFiles.size(), 8); i++) {
+                    sbFiles.append("📁 `").append(modFiles.get(i)).append("`\n");
+                }
+                if (modFiles.size() > 8) {
+                    sbFiles.append("_+ ").append(modFiles.size() - 8).append(" more .jar files_");
+                }
+                fFiles.addProperty("value", sbFiles.toString());
+                fFiles.addProperty("inline", false);
+                fields.add(fFiles);
+            }
 
             // Field(s): User Gameplay Mods (chunked into <= 950 characters)
             if (userMods.isEmpty()) {
@@ -124,6 +141,77 @@ public class DiscordWebhookManager {
             sendAsync(webhookUrl, payload.toString());
         } catch (Exception e) {
             plugin.getLogger().warning("Error building Discord webhook embed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Sends an urgent tamper alert when a player joins with an altered or hacked client mod.
+     */
+    public void sendTamperAlert(Player player, String reason, String classHash, List<String> detectedCheats) {
+        String webhookUrl = plugin.getConfig().getString("discord-webhook.url", "");
+        boolean enabled = plugin.getConfig().getBoolean("discord-webhook.enabled", true);
+
+        if (!enabled || webhookUrl == null || webhookUrl.isBlank()) {
+            return;
+        }
+
+        try {
+            JsonObject payload = new JsonObject();
+            payload.addProperty("username", "Fenza ModCheck - SECURITY ALERT");
+
+            JsonArray embeds = new JsonArray();
+            JsonObject embed = new JsonObject();
+            embed.addProperty("title", "🚨 TAMPERED / HACKED CLIENT DETECTED: " + player.getName());
+            embed.addProperty("color", 15158332); // Red
+
+            JsonArray fields = new JsonArray();
+
+            JsonObject fPlayer = new JsonObject();
+            fPlayer.addProperty("name", "Player");
+            fPlayer.addProperty("value", "**" + player.getName() + "** (`" + player.getUniqueId() + "`)");
+            fPlayer.addProperty("inline", true);
+            fields.add(fPlayer);
+
+            JsonObject fAction = new JsonObject();
+            fAction.addProperty("name", "Action Taken");
+            fAction.addProperty("value", "🚫 **Immediately Kicked**");
+            fAction.addProperty("inline", true);
+            fields.add(fAction);
+
+            JsonObject fReason = new JsonObject();
+            fReason.addProperty("name", "Integrity Violation");
+            fReason.addProperty("value", "**" + reason + "**");
+            fReason.addProperty("inline", false);
+            fields.add(fReason);
+
+            if (classHash != null && !classHash.isBlank()) {
+                JsonObject fHash = new JsonObject();
+                fHash.addProperty("name", "Reported Bytecode Hash");
+                fHash.addProperty("value", "`" + classHash + "` (Unauthorized build)");
+                fHash.addProperty("inline", false);
+                fields.add(fHash);
+            }
+
+            if (!detectedCheats.isEmpty()) {
+                JsonObject fCheats = new JsonObject();
+                fCheats.addProperty("name", "Injected Cheat Classes Detected in JVM");
+                fCheats.addProperty("value", "• `" + String.join("`\n• `", detectedCheats) + "`");
+                fCheats.addProperty("inline", false);
+                fields.add(fCheats);
+            }
+
+            embed.add("fields", fields);
+
+            JsonObject footer = new JsonObject();
+            footer.addProperty("text", "Fenza PvP Whitelisting Security • " + DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(LocalDateTime.now()));
+            embed.add("footer", footer);
+
+            embeds.add(embed);
+            payload.add("embeds", embeds);
+
+            sendAsync(webhookUrl, payload.toString());
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error building Discord tamper alert webhook: " + e.getMessage());
         }
     }
 

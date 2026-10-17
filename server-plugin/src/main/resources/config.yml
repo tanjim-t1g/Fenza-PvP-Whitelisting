@@ -12,6 +12,19 @@ tracked-players: []
 # How long (in seconds) to wait for the client mod handshake before kicking
 handshake-timeout: 10
 
+# Cryptographic Integrity & Anti-Tamper Verification
+integrity-check:
+  # Reject client mods that do not provide a valid cryptographic challenge signature
+  require-signature: true
+  # Enforce matching class bytecode hash (prevents code modification / recompilation)
+  enforce-class-hash: true
+  # Official SHA-256 hashes of compiled Fenza client classes
+  allowed-class-hashes:
+    - "c719f339a2be623068b9e448d4e9b0955a66580e1236df3bb41140aadae97486" # Modern (26.1 - 26.2+)
+    - "f4b712335283396b5409dc72709c70385a8c032ff926067e5e04ce6469ed3311" # Legacy (1.21.x)
+  # Message shown when client mod is altered or recompiled
+  kick-message-tampered: "§c[Fenza] Client mod integrity verification failed!\n§7Your client mod has been altered, modified, or is unofficial."
+
 # Message shown when player doesn't have the required mod
 kick-message-no-mod: "§cYou are missing a required mod to join this server."
 
